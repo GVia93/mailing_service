@@ -1,0 +1,12 @@
+<h1>Сообщения</h1>
+<a href="{% url 'mailings:message_create' %}">Добавить сообщение</a>
+<ul>
+  {% for message in object_list %}
+    <li>
+      {{message.subject}}
+      [<a href="{% url 'mailings:message_update' message.pk %}">Редактировать</a>]
+      [<a href="{% url 'mailings:message_delete' message.pk %}">Удалить</a>]
+    </li>
+  {% endfor %}
+</ul>
+<a href="{% url 'mailings:client_list' %}">К списку клиентов</a>
