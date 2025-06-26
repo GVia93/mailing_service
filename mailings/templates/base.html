@@ -44,6 +44,9 @@
             <li>
                 <a href="{% url 'mailings:mailing_list' %}" class="nav-link {% if '/mailings/' in request.path %}active{% endif %}">Рассылки</a>
             </li>
+            <li>
+                <a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempts/' in request.path %}active{% endif %}">Попытки рассылок</a>
+            </li>
         </ul>
         <hr>
         <div class="dropdown px-3">
