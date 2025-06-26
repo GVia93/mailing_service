@@ -1,5 +1,6 @@
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView,DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
+from django.db.models import Count
 
 from .forms import MailingForm
 from .models import Client, Message, Mailing, Attempt
@@ -83,3 +84,14 @@ class MailingDeleteView(DeleteView):
 class AttemptListView(ListView):
     model = Attempt
     template_name = 'mailings/attempt_list.html'
+
+
+class HomeView(TemplateView):
+    template_name = 'mailings/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_mailings'] = Mailing.objects.count()
+        context['active_mailings'] = Mailing.objects.filter(status='started').count()
+        context['unique_clients'] = Client.objects.values('email').distinct().count()
+        return context
