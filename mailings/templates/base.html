@@ -42,7 +42,7 @@
                 <a href="{% url 'mailings:message_list' %}" class="nav-link {% if '/messages/' in request.path %}active{% endif %}">Сообщения</a>
             </li>
             <li>
-                <a href="#" class="nav-link">Рассылки</a>
+                <a href="{% url 'mailings:mailing_list' %}" class="nav-link {% if '/mailings/' in request.path %}active{% endif %}">Рассылки</a>
             </li>
         </ul>
         <hr>

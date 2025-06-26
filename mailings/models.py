@@ -25,3 +25,20 @@ class Message(models.Model):
 
     def __str__(self):
         return self.subject
+
+
+class Mailing(models.Model):
+    STATUS_CHOICES = [
+        ('created', 'Создана'),
+        ('started', 'Запущена'),
+        ('completed', 'Завершена'),
+    ]
+
+    start_time = models.DateTimeField(verbose_name='Начало рассылки')
+    end_time = models.DateTimeField(verbose_name='Конец рассылки')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='created', verbose_name='Статус')
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='Сообщение')
+    clients = models.ManyToManyField(Client, verbose_name='Клиенты')
+
+    def __str__(self):
+        return f'{self.message.subject} ({self.get_status_display()})'
