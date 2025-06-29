@@ -1,7 +1,8 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
-from django.db.models import Count
-
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from .utils import send_mailing
 from .forms import MailingForm
 from .models import Client, Message, Mailing, Attempt
 
@@ -95,3 +96,10 @@ class HomeView(TemplateView):
         context['active_mailings'] = Mailing.objects.filter(status='started').count()
         context['unique_clients'] = Client.objects.values('email').distinct().count()
         return context
+
+
+def run_mailing(request, pk):
+    mailing = get_object_or_404(Mailing, pk=pk)
+    send_mailing(mailing)
+    messages.success(request, 'Рассылка запущена.')
+    return redirect('mailings:mailing_list')

@@ -36,6 +36,9 @@
         <h5 class="text-center text-white">Меню</h5>
         <ul class="nav nav-pills flex-column mb-auto">
             <li>
+                <a href="{% url 'mailings:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Главная</a>
+            </li>
+            <li>
                 <a href="{% url 'mailings:client_list' %}" class="nav-link {% if '/clients/' in request.path %}active{% endif %}">Клиенты</a>
             </li>
             <li>
@@ -45,12 +48,12 @@
                 <a href="{% url 'mailings:mailing_list' %}" class="nav-link {% if '/mailings/' in request.path %}active{% endif %}">Рассылки</a>
             </li>
             <li>
-                <a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempts/' in request.path %}active{% endif %}">Попытки рассылок</a>
+                <a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempts/' in request.path %}active{% endif %}">Попытки</a>
             </li>
         </ul>
         <hr>
-        <div class="dropdown px-3">
-            <span class="text-white">Пользователь</span>
+        <div class="px-3 text-white">
+            <small>Пользователь</small>
         </div>
     </div>
 
