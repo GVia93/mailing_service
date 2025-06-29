@@ -4,6 +4,8 @@ from .models import Attempt
 
 
 def send_mailing(mailing):
+    """Отправляет сообщения всем клиентам рассылки и фиксирует попытки."""
+
     for client in mailing.clients.all():
         try:
             send_mail(
