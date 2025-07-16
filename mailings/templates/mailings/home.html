@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<h1>Статистика рассылок</h1>
+<ul class="list-group">
+    <li class="list-group-item d-flex justify-content-between">
+        Всего рассылок: <strong>{{ total_mailings }}</strong>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+        Активных рассылок: <strong>{{ active_mailings }}</strong>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+        Уникальных получателей: <strong>{{ unique_clients }}</strong>
+    </li>
+</ul>
+{% endblock %}
