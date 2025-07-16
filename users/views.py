@@ -1,17 +1,52 @@
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetConfirmView
+from django.contrib.auth.views import (LoginView, LogoutView,
+                                       PasswordResetConfirmView,
+                                       PasswordResetView)
+from django.core.mail import send_mail
+from django.shortcuts import redirect
+from django.urls import reverse, reverse_lazy
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.views import View
 from django.views.generic import CreateView, UpdateView
-from django.urls import reverse_lazy
-from .forms import UserRegisterForm, ProfileUpdateForm
+
+from .forms import ProfileUpdateForm, UserRegisterForm
 from .models import User
+from .tokens import account_activation_token
+
+User = get_user_model()
+
+
+class ActivateView(View):
+    """
+    Представление для активации пользователя по email-ссылке.
+    Проверяет валидность токена, активирует аккаунт и перенаправляет на страницу входа.
+    """
+
+    def get(self, request, uidb64, token):
+        """
+        Обрабатывает GET-запрос по ссылке подтверждения регистрации.
+        """
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except Exception:
+            user = None
+
+        if user and account_activation_token.check_token(user, token):
+            user.is_active = True
+            user.save()
+            return redirect("users:login")
+        return redirect("users:register")
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     """
     Представление для редактирования профиля текущего пользователя.
     Доступно только авторизованным пользователям.
-    Использует форму ProfileUpdateForm и обновляет модель CustomUser.
-    После сохранения перенаправляет на главную страницу.
+    Использует форму ProfileUpdateForm.
     """
 
     model = User
@@ -21,37 +56,80 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         """
-        Возвращает объект текущего пользователя.
+        Возвращает текущего авторизованного пользователя.
         """
         return self.request.user
 
 
 class RegisterView(CreateView):
-    """Регистрация нового пользователя."""
+    """
+    Представление для регистрации нового пользователя.
+    После регистрации отправляется email для подтверждения.
+    """
+
     model = User
     form_class = UserRegisterForm
-    template_name = 'users/register.html'
-    success_url = reverse_lazy('users:login')
+    template_name = "users/register.html"
+    success_url = reverse_lazy("users:login")
+
+    def form_valid(self, form):
+        """
+        Обработка валидной формы регистрации.
+        Создаёт неактивного пользователя и отправляет письмо с ссылкой активации.
+        """
+        user = form.save(commit=False)
+        user.is_active = False
+        user.save()
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = account_activation_token.make_token(user)
+        activation_link = self.request.build_absolute_uri(
+            reverse("users:activate", kwargs={"uidb64": uid, "token": token})
+        )
+
+        send_mail(
+            "Подтверждение регистрации",
+            f"Перейдите по ссылке для активации: {activation_link}",
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+        )
+        return redirect("users:login")
 
 
 class CustomLoginView(LoginView):
-    """Вход пользователя в систему."""
-    template_name = 'users/login.html'
+    """
+    Представление для входа пользователя в систему.
+    Использует стандартную форму и шаблон users/login.html.
+    """
+
+    template_name = "users/login.html"
 
 
 class CustomLogoutView(LogoutView):
-    """Выход пользователя из системы."""
-    next_page = reverse_lazy('users:login')
+    """
+    Представление для выхода пользователя из системы.
+    После выхода перенаправляет на страницу входа.
+    """
+
+    next_page = reverse_lazy("users:login")
 
 
 class CustomPasswordResetView(PasswordResetView):
-    """Запрос сброса пароля."""
-    template_name = 'users/password_reset.html'
-    email_template_name = 'users/password_reset_email.html'
-    success_url = reverse_lazy('users:password_reset_done')
+    """
+    Представление для запроса сброса пароля.
+    Отправляет письмо со ссылкой на смену пароля.
+    """
+
+    template_name = "users/password_reset.html"
+    email_template_name = "users/password_reset_email.html"
+    success_url = reverse_lazy("users:password_reset_done")
 
 
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    """Подтверждение сброса пароля по ссылке из письма."""
-    template_name = 'users/password_reset_confirm.html'
-    success_url = reverse_lazy('users:login')
+    """
+    Представление для подтверждения сброса пароля.
+    Отображает форму ввода нового пароля.
+    """
+
+    template_name = "users/password_reset_confirm.html"
+    success_url = reverse_lazy("users:login")
