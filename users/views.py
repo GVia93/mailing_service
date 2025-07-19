@@ -1,6 +1,7 @@
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordResetConfirmView,
                                        PasswordResetView)
@@ -10,13 +11,47 @@ from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views import View
-from django.views.generic import CreateView, UpdateView
+from django.views.generic import CreateView, ListView, UpdateView
 
 from .forms import ProfileUpdateForm, UserRegisterForm
-from .models import User
 from .tokens import account_activation_token
 
 User = get_user_model()
+
+
+class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    """
+    Представление для отображения списка пользователей.
+    Доступно только менеджерам.
+    """
+
+    model = User
+    template_name = "users/user_list.html"
+    context_object_name = "users"
+
+    def test_func(self):
+        return self.request.user.is_manager
+
+
+class UserBlockToggleView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """
+    Представление для блокировки или разблокировки пользователя.
+    Меняет статус is_active у пользователя. Доступно только менеджерам.
+    """
+
+    model = User
+    fields = []
+
+    def post(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.is_active = not user.is_active
+        user.save()
+        status = "разблокирован" if user.is_active else "заблокирован"
+        messages.success(request, f"Пользователь {user.email} {status}.")
+        return redirect("users:user_list")
+
+    def test_func(self):
+        return self.request.user.is_manager
 
 
 class ActivateView(View):
