@@ -51,9 +51,13 @@
             <li>
                 <a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempt_list/' in request.path %}active{% endif %}">Статистика</a>
             </li>
+            {% if request.user.is_manager %}
+            <li>
+                <a href="{% url 'users:user_list' %}" class="nav-link {% if '/user_list/' in request.path %}active{% endif %}">Пользователи</a>
+            </li>
+            {% endif %}
         </ul>
         {% endif %}
-
         <hr>
 
         <div class="dropdown px-3">

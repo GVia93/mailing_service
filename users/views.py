@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordResetConfirmView,
                                        PasswordResetView)
+from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
@@ -44,6 +45,10 @@ class UserBlockToggleView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         user = self.get_object()
+
+        if user.is_superuser:
+            raise PermissionDenied("Нельзя блокировать суперпользователя.")
+
         user.is_active = not user.is_active
         user.save()
         status = "разблокирован" if user.is_active else "заблокирован"
