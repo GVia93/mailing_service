@@ -16,8 +16,10 @@
         <tr>
             <td>{{ message.subject }}</td>
             <td>
-                <a href="{% url 'mailings:message_update' message.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                <a href="{% url 'mailings:message_delete' message.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% if request.user == message.owner %}
+                    <a href="{% url 'mailings:message_update' message.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url 'mailings:message_delete' message.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

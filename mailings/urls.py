@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import HomeView, StatsView
+from .views import HomeView, AttemptListView
 from . import views
 
 
@@ -29,5 +29,5 @@ urlpatterns += [
 ]
 
 urlpatterns += [
-    path("stats/", StatsView.as_view(), name="stats"),
+    path("attempt_list/", AttemptListView.as_view(), name="attempt_list"),
 ]

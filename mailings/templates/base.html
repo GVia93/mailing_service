@@ -32,23 +32,39 @@
     </style>
 </head>
 <body>
-    <div class="sidebar d-flex flex-column p-3 border-end">
+    <div class="sidebar d-flex flex-column justify-content-between p-3 border-end">
+        {% if request.user.is_authenticated %}
         <h5 class="text-center text-white">Меню</h5>
         <ul class="nav nav-pills flex-column mb-auto">
-            <li><a href="{% url 'mailings:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Главная</a></li>
-            <li><a href="{% url 'mailings:client_list' %}" class="nav-link {% if '/clients/' in request.path %}active{% endif %}">Клиенты</a></li>
-            <li><a href="{% url 'mailings:message_list' %}" class="nav-link {% if '/messages/' in request.path %}active{% endif %}">Сообщения</a></li>
-            <li><a href="{% url 'mailings:mailing_list' %}" class="nav-link {% if '/mailings/' in request.path %}active{% endif %}">Рассылки</a></li>
-            <li><a href="{% url 'mailings:stats' %}" class="nav-link {% if '/stats/' in request.path %}active{% endif %}">Статистика</a></li>
+            <li>
+                <a href="{% url 'mailings:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Главная</a>
+            </li>
+            <li>
+                <a href="{% url 'mailings:client_list' %}" class="nav-link {% if '/clients/' in request.path %}active{% endif %}">Клиенты</a>
+            </li>
+            <li>
+                <a href="{% url 'mailings:message_list' %}" class="nav-link {% if '/messages/' in request.path %}active{% endif %}">Сообщения</a>
+            </li>
+            <li>
+                <a href="{% url 'mailings:mailing_list' %}" class="nav-link {% if '/mailings/' in request.path %}active{% endif %}">Рассылки</a>
+            </li>
+            <li>
+                <a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempt_list/' in request.path %}active{% endif %}">Статистика</a>
+            </li>
         </ul>
+        {% endif %}
+
         <hr>
+
         <div class="dropdown px-3">
             <a href="#" class="d-block text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
                 Пользователь
             </a>
             <ul class="dropdown-menu text-small shadow">
                 {% if request.user.is_authenticated %}
-                    <li><a class="dropdown-item" href="{% url 'users:profile' %}">Профиль</a></li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'users:profile' %}">Профиль</a>
+                    </li>
                     <li>
                         <form action="{% url 'users:logout' %}" method="post" class="px-3 m-0">
                             {% csrf_token %}
@@ -56,8 +72,12 @@
                         </form>
                     </li>
                 {% else %}
-                    <li><a class="dropdown-item" href="{% url 'users:login' %}">Войти</a></li>
-                    <li><a class="dropdown-item" href="{% url 'users:register' %}">Регистрация</a></li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'users:login' %}">Войти</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'users:register' %}">Регистрация</a>
+                    </li>
                 {% endif %}
             </ul>
         </div>

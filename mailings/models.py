@@ -5,6 +5,12 @@ from django.db import models
 class Client(models.Model):
     """Получатель рассылки: email, ФИО и комментарий."""
 
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="clients",
+        verbose_name="Владелец",
+    )
     email = models.EmailField(unique=True, verbose_name="mail")
     full_name = models.CharField(max_length=100, verbose_name="Клиент")
     comment = models.TextField(blank=True, verbose_name="Комментарий")
@@ -20,6 +26,12 @@ class Client(models.Model):
 class Message(models.Model):
     """Сообщение для рассылки: тема и тело письма."""
 
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="messages",
+        verbose_name="Владелец",
+    )
     subject = models.CharField(max_length=255, verbose_name="Тема письма")
     body = models.TextField(blank=True, verbose_name="Тело письма")
 
@@ -70,6 +82,12 @@ class Attempt(models.Model):
     server_response = models.TextField()
     mailing = models.ForeignKey(
         Mailing, on_delete=models.CASCADE, related_name="attempts"
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="attempts",
+        verbose_name="Владелец",
     )
 
     def __str__(self):

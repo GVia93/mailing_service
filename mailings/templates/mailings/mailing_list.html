@@ -22,9 +22,11 @@
             <td>{{ mailing.end_time }}</td>
             <td>{{ mailing.get_status_display }}</td>
             <td>
-                <a href="{% url 'mailings:mailing_run' mailing.pk %}" class="btn btn-sm btn-primary">Отправить</a>
-                <a href="{% url 'mailings:mailing_update' mailing.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                <a href="{% url 'mailings:mailing_delete' mailing.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% if request.user == mailing.owner %}
+                    <a href="{% url 'mailings:mailing_run' mailing.pk %}" class="btn btn-sm btn-primary">Отправить</a>
+                    <a href="{% url 'mailings:mailing_update' mailing.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url 'mailings:mailing_delete' mailing.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

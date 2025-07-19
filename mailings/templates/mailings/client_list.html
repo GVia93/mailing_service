@@ -20,8 +20,10 @@
             <td>{{ client.email }}</td>
             <td>{{ client.comment }}</td>
             <td>
-                <a href="{% url 'mailings:client_update' client.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                <a href="{% url 'mailings:client_delete' client.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% if request.user == client.owner %}
+                    <a href="{% url 'mailings:client_update' client.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url 'mailings:client_delete' client.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

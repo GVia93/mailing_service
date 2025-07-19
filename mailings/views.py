@@ -1,111 +1,149 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import (CreateView, DeleteView, ListView,
                                   TemplateView, UpdateView)
 
-from .forms import MailingForm
+from .forms import ClientForm, MailingForm, MessageForm
 from .models import Attempt, Client, Mailing, Message
 from .utils import send_mailing
 
 
-class StatsView(LoginRequiredMixin, TemplateView):
-    """
-    Отображает статистику по попыткам рассылок текущего пользователя.
-    """
+class AttemptListView(LoginRequiredMixin, ListView):
+    """Показывает список попыток рассылки."""
 
-    template_name = "mailings/stats.html"
+    model = Attempt
+    template_name = "mailings/attempt_list.html"
+
+    def get_queryset(self):
+        return Attempt.objects.filter(owner=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        mailings = Mailing.objects.filter(owner=self.request.user)
+        user = self.request.user
 
-        context["total_attempts"] = Attempt.objects.filter(mailing__in=mailings).count()
-        context["success_attempts"] = Attempt.objects.filter(
-            mailing__in=mailings, status="success"
-        ).count()
-        context["failed_attempts"] = Attempt.objects.filter(
-            mailing__in=mailings, status="failed"
-        ).count()
-        context["messages_sent"] = Attempt.objects.filter(
-            mailing__in=mailings, status="success"
-        ).count()
+        mailings = Mailing.objects.filter(owner=user)
+        attempts = Attempt.objects.filter(mailing__in=mailings)
+
+        context["total_attempts"] = attempts.count()
+        context["success_attempts"] = attempts.filter(status="success").count()
+        context["failed_attempts"] = attempts.filter(status="failed").count()
+        context["messages_sent"] = attempts.filter(status="success").count()
 
         return context
 
 
-class ClientListView(ListView):
+class ClientListView(LoginRequiredMixin, ListView):
     """Выводит список всех клиентов."""
 
     model = Client
     template_name = "mailings/client_list.html"
 
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_manager:
+            return Client.objects.all()
+        return Client.objects.filter(owner=user)
 
-class ClientCreateView(CreateView):
+
+class ClientCreateView(LoginRequiredMixin, CreateView):
     """Создает нового клиента."""
 
     model = Client
-    fields = ["email", "full_name", "comment"]
+    form_class = ClientForm
     template_name = "mailings/client_from.html"
     success_url = reverse_lazy("mailings:client_list")
 
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
-class ClientUpdateView(UpdateView):
+
+class ClientUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирует данные клиента."""
 
     model = Client
-    fields = ["email", "full_name", "comment"]
+    form_class = ClientForm
     template_name = "mailings/client_from.html"
     success_url = reverse_lazy("mailings:client_list")
 
+    def get_queryset(self):
+        return Client.objects.filter(owner=self.request.user)
 
-class ClientDeleteView(DeleteView):
+
+class ClientDeleteView(LoginRequiredMixin, DeleteView):
     """Удаляет клиента."""
 
     model = Client
     template_name = "mailings/client_confirm_delete.html"
     success_url = reverse_lazy("mailings:client_list")
 
+    def get_queryset(self):
+        return Client.objects.filter(owner=self.request.user)
 
-class MessageListView(ListView):
+
+class MessageListView(LoginRequiredMixin, ListView):
     """Выводит список всех сообщений."""
 
     model = Message
     template_name = "mailings/message_list.html"
 
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_manager:
+            return Message.objects.all()
+        return Message.objects.filter(owner=user)
 
-class MessageCreateView(CreateView):
+
+class MessageCreateView(LoginRequiredMixin, CreateView):
     """Создает новое сообщение."""
 
     model = Message
-    fields = ["subject", "body"]
+    form_class = MessageForm
     template_name = "mailings/message_form.html"
     success_url = reverse_lazy("mailings:message_list")
 
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
-class MessageUpdateView(UpdateView):
+
+class MessageUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирует сообщение."""
 
     model = Message
-    fields = ["subject", "body"]
+    form_class = MessageForm
     template_name = "mailings/message_form.html"
     success_url = reverse_lazy("mailings:message_list")
 
+    def get_queryset(self):
+        return Message.objects.filter(owner=self.request.user)
 
-class MessageDeleteView(DeleteView):
+
+class MessageDeleteView(LoginRequiredMixin, DeleteView):
     """Удаляет сообщение."""
 
     model = Message
     template_name = "mailings/message_confirm_delete.html"
     success_url = reverse_lazy("mailings:message_list")
 
+    def get_queryset(self):
+        return Message.objects.filter(owner=self.request.user)
 
-class MailingListView(ListView):
+
+class MailingListView(LoginRequiredMixin, ListView):
     """Выводит список всех рассылок."""
 
     model = Mailing
     template_name = "mailings/mailing_list.html"
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_manager:
+            return Mailing.objects.all()
+        return Mailing.objects.filter(owner=user)
 
 
 class MailingCreateView(LoginRequiredMixin, CreateView):
@@ -124,7 +162,7 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MailingUpdateView(UpdateView):
+class MailingUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирует рассылку."""
 
     model = Mailing
@@ -132,13 +170,19 @@ class MailingUpdateView(UpdateView):
     template_name = "mailings/mailing_form.html"
     success_url = reverse_lazy("mailings:mailing_list")
 
+    def get_queryset(self):
+        return Mailing.objects.filter(owner=self.request.user)
 
-class MailingDeleteView(DeleteView):
+
+class MailingDeleteView(LoginRequiredMixin, DeleteView):
     """Удаляет рассылку."""
 
     model = Mailing
     template_name = "mailings/mailing_confirm_delete.html"
     success_url = reverse_lazy("mailings:mailing_list")
+
+    def get_queryset(self):
+        return Mailing.objects.filter(owner=self.request.user)
 
 
 class HomeView(TemplateView):
@@ -158,6 +202,10 @@ def run_mailing(request, pk):
     """Ручной запуск рассылки и фиксация попыток отправки."""
 
     mailing = get_object_or_404(Mailing, pk=pk)
+
+    if mailing.owner != request.user:
+        raise PermissionDenied("Вы не можете запускать чужую рассылку.")
+
     send_mailing(mailing)
     messages.success(request, "Рассылка запущена.")
     return redirect("mailings:mailing_list")

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Попытки рассылок{% endblock %}
+
+{% block content %}
+<h1>Статистика рассылок</h1>
+<ul class="list-group">
+    <li class="list-group-item">Всего попыток: {{ total_attempts }}</li>
+    <li class="list-group-item">Успешных попыток: {{ success_attempts }}</li>
+    <li class="list-group-item">Неудачных попыток: {{ failed_attempts }}</li>
+    <li class="list-group-item">Отправлено сообщений: {{ messages_sent }}</li>
+</ul>
+<h1>Попытки рассылок</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Рассылка</th>
+            <th>Дата и время</th>
+            <th>Статус</th>
+            <th>Ответ сервера</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for attempt in object_list %}
+            {% if request.user == attempt.owner %}
+            <tr>
+                <td>{{ attempt.mailing.message.subject }}</td>
+                <td>{{ attempt.created_at }}</td>
+                <td>{{ attempt.get_status_display }}</td>
+                <td>{{ attempt.server_response }}</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
