@@ -39,7 +39,7 @@
             <li><a href="{% url 'mailings:client_list' %}" class="nav-link {% if '/clients/' in request.path %}active{% endif %}">Клиенты</a></li>
             <li><a href="{% url 'mailings:message_list' %}" class="nav-link {% if '/messages/' in request.path %}active{% endif %}">Сообщения</a></li>
             <li><a href="{% url 'mailings:mailing_list' %}" class="nav-link {% if '/mailings/' in request.path %}active{% endif %}">Рассылки</a></li>
-            <li><a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempts/' in request.path %}active{% endif %}">Попытки</a></li>
+            <li><a href="{% url 'mailings:stats' %}" class="nav-link {% if '/stats/' in request.path %}active{% endif %}">Статистика</a></li>
         </ul>
         <hr>
         <div class="dropdown px-3">
