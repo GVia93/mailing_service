@@ -108,13 +108,20 @@ class MailingListView(ListView):
     template_name = "mailings/mailing_list.html"
 
 
-class MailingCreateView(CreateView):
+class MailingCreateView(LoginRequiredMixin, CreateView):
     """Создает новую рассылку."""
 
     model = Mailing
     form_class = MailingForm
     template_name = "mailings/mailing_form.html"
     success_url = reverse_lazy("mailings:mailing_list")
+
+    def form_valid(self, form):
+        """
+        Установка текущего пользователя как владельца.
+        """
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
 
 class MailingUpdateView(UpdateView):
