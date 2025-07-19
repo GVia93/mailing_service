@@ -4,10 +4,8 @@ from django.core.mail import send_mail
 from .models import Attempt
 
 
-def send_mailing(mailing):
-    """
-    Отправляет сообщения всем клиентам рассылки и фиксирует попытки.
-    """
+def send_mailing(mailing, user):
+    """Отправляет сообщения клиентам и фиксирует попытки отправки."""
 
     for client in mailing.clients.all():
         try:
@@ -20,14 +18,11 @@ def send_mailing(mailing):
             )
             Attempt.objects.create(
                 mailing=mailing,
-                owner=mailing.owner,
+                owner=user,
                 status="success",
                 server_response="Письмо успешно отправлено",
             )
         except Exception as e:
             Attempt.objects.create(
-                mailing=mailing,
-                owner=mailing.owner,
-                status="failed",
-                server_response=str(e),
+                mailing=mailing, owner=user, status="failed", server_response=str(e)
             )

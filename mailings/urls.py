@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import HomeView, AttemptListView
+from .views import HomeView, AttemptListView, MailingToggleStatusView
 from . import views
 
 
@@ -25,7 +25,7 @@ urlpatterns += [
     path('mailings/create/', views.MailingCreateView.as_view(), name='mailing_create'),
     path('mailings/<int:pk>/update/', views.MailingUpdateView.as_view(), name='mailing_update'),
     path('mailings/<int:pk>/delete/', views.MailingDeleteView.as_view(), name='mailing_delete'),
-    path('mailings/<int:pk>/run/', views.run_mailing, name='mailing_run')
+    path("mailings/<int:pk>/toggle/", MailingToggleStatusView.as_view(), name="mailing_toggle"),
 ]
 
 urlpatterns += [

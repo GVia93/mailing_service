@@ -3,12 +3,34 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import (CreateView, DeleteView, ListView,
                                   TemplateView, UpdateView)
 
 from .forms import ClientForm, MailingForm, MessageForm
 from .models import Attempt, Client, Mailing, Message
 from .utils import send_mailing
+
+
+class MailingToggleStatusView(LoginRequiredMixin, View):
+    """Включает или отключает рассылку."""
+
+    def post(self, request, pk, *args, **kwargs):
+        mailing = get_object_or_404(Mailing, pk=pk)
+
+        if request.user != mailing.owner and not request.user.is_manager:
+            raise PermissionDenied("Нет прав для изменения статуса рассылки.")
+
+        mailing.status = "completed" if mailing.status == "started" else "started"
+        mailing.save()
+
+        if mailing.status == "started":
+            send_mailing(mailing, request.user)
+
+        messages.success(
+            request, f"Статус рассылки изменён на: {mailing.get_status_display()}"
+        )
+        return redirect("mailings:mailing_list")
 
 
 class AttemptListView(LoginRequiredMixin, ListView):
@@ -196,16 +218,3 @@ class HomeView(TemplateView):
         context["active_mailings"] = Mailing.objects.filter(status="started").count()
         context["unique_clients"] = Client.objects.values("email").distinct().count()
         return context
-
-
-def run_mailing(request, pk):
-    """Ручной запуск рассылки и фиксация попыток отправки."""
-
-    mailing = get_object_or_404(Mailing, pk=pk)
-
-    if mailing.owner != request.user:
-        raise PermissionDenied("Вы не можете запускать чужую рассылку.")
-
-    send_mailing(mailing)
-    messages.success(request, "Рассылка запущена.")
-    return redirect("mailings:mailing_list")
