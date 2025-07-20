@@ -1,58 +1,104 @@
-# Сервис управления рассылками (Django)
+# Django Email Mailing Service
 
-Первая часть курсового проекта: реализация административного интерфейса для рассылки писем клиентам.
+Веб-приложение на Django для управления email-рассылками: создание сообщений, управление клиентами, запуск рассылок, просмотр статистики и контроль доступа пользователей.
 
-## Возможности
+## 📌Функциональность
 
-- CRUD для клиентов (email, ФИО, комментарий)
-- CRUD для сообщений (тема, тело письма)
-- CRUD для рассылок (период действия, статус, получатели)
-- Ручной запуск рассылок
-- Учёт попыток отправки (успешно/неуспешно, ответ сервера)
-- Главная страница со статистикой:
-  - общее число рассылок;
-  - активные рассылки (статус "Запущена");
-  - уникальные получатели.
+### 🔒Аутентификация и пользователи
+- Регистрация с подтверждением email
+- Вход, выход, восстановление пароля
+- Кастомная модель пользователя (`AUTH_USER_MODEL`)
+- Поддержка ролей: пользователь / менеджер
 
-## Запуск проекта
+### Пользователь
+- Управление своими клиентами, сообщениями и рассылками
+- Просмотр статистики по своим попыткам рассылки
+
+### Менеджер
+- Просмотр всех клиентов, сообщений, рассылок
+- Просмотр списка пользователей
+- Блокировка пользователей
+- Отключение чужих рассылок
+
+### Рассылки
+- Статусы: `Создана`, `Запущена`, `Завершена`
+- Поддержка M2M связи с клиентами
+- Ручной запуск рассылки (кнопка / команда)
+- Учёт попыток с фиксацией статуса и ответа почтового сервера
+
+### Статистика
+- Счётчики: общее число, успешные/неуспешные попытки, отправленные сообщения
+- Главная: статистика по рассылкам и уникальным клиентам
+
+### Кеширование
+- Серверное: `cache_page`, `cache.set()`
+- Клиентское: заголовки `Cache-Control`
+
+## Установка и запуск
+
+### 1. Клонируйте репозиторий
 
 ```bash
-git clone <repo>
+git clone https://github.com/your-username/mailing_service.git
 cd mailing_service
+```
+
+### 2. Установите зависимости
+
+```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+### 3. Создайте `.env`
+
+```ini
+SECRET_KEY=your_secret_key
+DEBUG=True
+
+NAME=your_db_name
+USER=your_db_user
+PASSWORD=your_db_password
+HOST=localhost
+PORT=5432
+
+EMAIL_HOST=smtp.yourprovider.com
+EMAIL_PORT=465
+EMAIL_HOST_USER=your_email@example.com
+EMAIL_HOST_PASSWORD=your_password
+```
+
+### 4. Примените миграции и создайте суперпользователя
+
+```bash
 python manage.py migrate
+python manage.py createsuperuser
+```
+
+### 5. Создайте группу менеджеров
+
+```bash
+python manage.py create_managers_group
+```
+
+### 6. Запустите сервер
+
+```bash
 python manage.py runserver
 ```
 
-## Настройки почты
 
-В `settings.py` или `.env`:
+## Структура проекта
 
-```python
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.example.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your@email.com'
-EMAIL_HOST_PASSWORD = 'yourpassword'
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-```
+- `config/` — настройки проекта
+- `mailings/` — логика рассылок (модели, формы, шаблоны, views, команды)
+- `users/` — управление пользователями, авторизация
+- `templates/` — HTML-шаблоны на Bootstrap 5
+- `static/` — стили Bootstrap
+- `manage.py` — точка входа
 
-Для теста:
-```python
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-```
 
-## Стек
+## Лицензия
 
-- Python 3.12+
-- Django 4+
-- Bootstrap 5 (для UI)
-
-## Структура
-
-- `mailings/` — приложение рассылки
-- `templates/mailings/` — шаблоны
-- `utils.py` — логика отправки писем
+Проект реализован в рамках учебного курса и распространяется свободно.
