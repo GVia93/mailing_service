@@ -1,9 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.cache import cache_control
 from django.views.generic import (CreateView, DeleteView, ListView,
                                   TemplateView, UpdateView)
 
@@ -33,6 +36,7 @@ class MailingToggleStatusView(LoginRequiredMixin, View):
         return redirect("mailings:mailing_list")
 
 
+@method_decorator(cache_control(private=True, max_age=600), name="dispatch")
 class AttemptListView(LoginRequiredMixin, ListView):
     """Показывает список попыток рассылки."""
 
@@ -57,6 +61,7 @@ class AttemptListView(LoginRequiredMixin, ListView):
         return context
 
 
+@method_decorator(cache_control(private=True, max_age=600), name="dispatch")
 class ClientListView(LoginRequiredMixin, ListView):
     """Выводит список всех клиентов."""
 
@@ -106,6 +111,7 @@ class ClientDeleteView(LoginRequiredMixin, DeleteView):
         return Client.objects.filter(owner=self.request.user)
 
 
+@method_decorator(cache_control(private=True, max_age=600), name="dispatch")
 class MessageListView(LoginRequiredMixin, ListView):
     """Выводит список всех сообщений."""
 
@@ -155,6 +161,7 @@ class MessageDeleteView(LoginRequiredMixin, DeleteView):
         return Message.objects.filter(owner=self.request.user)
 
 
+@method_decorator(cache_control(private=True, max_age=600), name="dispatch")
 class MailingListView(LoginRequiredMixin, ListView):
     """Выводит список всех рассылок."""
 
@@ -207,14 +214,25 @@ class MailingDeleteView(LoginRequiredMixin, DeleteView):
         return Mailing.objects.filter(owner=self.request.user)
 
 
+@method_decorator(cache_control(public=True, max_age=600), name="dispatch")
 class HomeView(TemplateView):
-    """ """
+    """
+    Главная страница со статистикой. Серверное кеширование на 10 минут.
+    """
 
     template_name = "mailings/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["total_mailings"] = Mailing.objects.count()
-        context["active_mailings"] = Mailing.objects.filter(status="started").count()
-        context["unique_clients"] = Client.objects.values("email").distinct().count()
+
+        stats = cache.get("home_stats")
+        if not stats:
+            stats = {
+                "total_mailings": Mailing.objects.count(),
+                "active_mailings": Mailing.objects.filter(status="started").count(),
+                "unique_clients": Client.objects.values("email").distinct().count(),
+            }
+            cache.set("home_stats", stats, 60 * 10)
+
+        context.update(stats)
         return context
