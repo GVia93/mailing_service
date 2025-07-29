@@ -33,6 +33,9 @@ class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def test_func(self):
         return self.request.user.is_manager
 
+    def get_queryset(self):
+        return User.objects.filter(is_superuser=False).exclude(groups__name="Менеджеры")
+
 
 class UserBlockToggleView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """
