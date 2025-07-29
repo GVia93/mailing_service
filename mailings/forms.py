@@ -4,7 +4,10 @@ from .models import Client, Mailing, Message
 
 
 class MailingForm(forms.ModelForm):
-    """Форма создания/редактирования рассылки с выбором даты и времени через input type="datetime-local"."""
+    """
+    Форма создания/редактирования рассылки с выбором даты и времени.
+    Ограничивает выбор сообщений и клиентов только текущим пользователем.
+    """
 
     class Meta:
         model = Mailing
@@ -13,6 +16,12 @@ class MailingForm(forms.ModelForm):
             "start_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "end_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        self.fields["clients"].queryset = Client.objects.filter(owner=user)
+        self.fields["message"].queryset = Message.objects.filter(owner=user)
 
 
 class ClientForm(forms.ModelForm):

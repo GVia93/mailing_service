@@ -118,10 +118,7 @@ class MessageListView(LoginRequiredMixin, ListView):
     template_name = "mailings/message_list.html"
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_manager:
-            return Message.objects.all()
-        return Message.objects.filter(owner=user)
+        return Message.objects.filter(owner=self.request.user)
 
 
 class MessageCreateView(LoginRequiredMixin, CreateView):
@@ -190,6 +187,17 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         form.instance.status = "created"
         return super().form_valid(form)
 
+    def get_queryset(self):
+        return Mailing.objects.filter(owner=self.request.user)
+
+    def get_form_kwargs(self):
+        """
+        Добавляет текущего пользователя в параметры формы.
+        """
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
 
 class MailingUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирует рассылку."""
@@ -205,6 +213,14 @@ class MailingUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         form.instance.status = "created"
         return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        """
+        Добавляет текущего пользователя в параметры формы.
+        """
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
 
 class MailingDeleteView(LoginRequiredMixin, DeleteView):
