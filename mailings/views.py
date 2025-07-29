@@ -24,16 +24,14 @@ class MailingToggleStatusView(LoginRequiredMixin, View):
         if request.user != mailing.owner and not request.user.is_manager:
             raise PermissionDenied("Нет прав для изменения статуса рассылки.")
 
-        if mailing.status == "created":
-            mailing.status = "started"
-            mailing.save()
-
         if mailing.status == "started":
-            send_mailing(mailing, request.user)
+            mailing.status = "completed"
+            mailing.save(update_fields=["status"])
+        elif mailing.status == "created" or "completed":
+            mailing.status = "started"
+            mailing.save(update_fields=["status"])
+            send_mailing(mailing)
 
-        messages.success(
-            request, f"Статус рассылки изменён на: {mailing.get_status_display()}"
-        )
         return redirect("mailings:mailing_list")
 
 
@@ -189,7 +187,7 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         Установка текущего пользователя как владельца.
         """
         form.instance.owner = self.request.user
-        form.instance.status = 'created'
+        form.instance.status = "created"
         return super().form_valid(form)
 
 
@@ -205,7 +203,7 @@ class MailingUpdateView(LoginRequiredMixin, UpdateView):
         return Mailing.objects.filter(owner=self.request.user)
 
     def form_valid(self, form):
-        form.instance.status = 'created'
+        form.instance.status = "created"
         return super().form_valid(form)
 
 
