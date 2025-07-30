@@ -51,7 +51,7 @@
             <li>
                 <a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempt_list/' in request.path %}active{% endif %}">Статистика</a>
             </li>
-            {% if request.user.is_manager %}
+            {% if perms.users.can_view_user_list %}
             <li>
                 <a href="{% url 'users:user_list' %}" class="nav-link {% if '/user_list/' in request.path %}active{% endif %}">Пользователи</a>
             </li>

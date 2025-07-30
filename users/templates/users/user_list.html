@@ -17,7 +17,7 @@
             <td>{{ user.email }}</td>
             <td>{{ user.is_active|yesno:"Да,Нет" }}</td>
             <td>
-                {% if request.user != user %}
+                {% if perms.users.can_block_users %}
                 <form method="post" action="{% url 'users:user_toggle_block' user.pk %}">
                     {% csrf_token %}
                     <button class="btn btn-sm btn-danger">

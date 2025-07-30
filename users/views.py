@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordResetConfirmView,
                                        PasswordResetView)
@@ -20,7 +20,7 @@ from .tokens import account_activation_token
 User = get_user_model()
 
 
-class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class UserListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
     Представление для отображения списка пользователей.
     Доступно только менеджерам.
@@ -29,9 +29,7 @@ class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = User
     template_name = "users/user_list.html"
     context_object_name = "users"
-
-    def test_func(self):
-        return self.request.user.is_manager
+    permission_required = "users.can_view_user_list"
 
     def get_queryset(self):
         return User.objects.filter(is_superuser=False).exclude(groups__name="Менеджеры")
@@ -59,7 +57,7 @@ class UserBlockToggleView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return redirect("users:user_list")
 
     def test_func(self):
-        return self.request.user.is_manager
+        return self.request.user.has_perm("users.can_block_users")
 
 
 class ActivateView(View):

@@ -22,7 +22,7 @@
             <td>{{ mailing.end_time }}</td>
             <td>{{ mailing.get_status_display }}</td>
             <td>
-                {% if request.user.is_manager or request.user == mailing.owner %}
+                {% if perms.mailings.can_toggle_mailing or request.user == mailing.owner %}
                     <form action="{% url 'mailings:mailing_toggle' mailing.pk %}" method="post" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-outline-success">

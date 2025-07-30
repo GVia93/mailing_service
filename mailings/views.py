@@ -1,4 +1,3 @@
-from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
@@ -21,13 +20,15 @@ class MailingToggleStatusView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         mailing = get_object_or_404(Mailing, pk=pk)
 
-        if request.user != mailing.owner and not request.user.is_manager:
+        if request.user != mailing.owner and not request.user.has_perm(
+            "mailings.can_toggle_mailing"
+        ):
             raise PermissionDenied("Нет прав для изменения статуса рассылки.")
 
         if mailing.status == "started":
             mailing.status = "completed"
             mailing.save(update_fields=["status"])
-        elif mailing.status == "created" or "completed":
+        elif mailing.status in ["created", "completed"]:
             mailing.status = "started"
             mailing.save(update_fields=["status"])
             send_mailing(mailing)
@@ -69,7 +70,7 @@ class ClientListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_manager:
+        if user.has_perm("mailings.can_view_all_clients"):
             return Client.objects.all()
         return Client.objects.filter(owner=user)
 
@@ -166,7 +167,7 @@ class MailingListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_manager:
+        if user.has_perm("mailings.can_view_all_mailings"):
             return Mailing.objects.all()
         return Mailing.objects.filter(owner=user)
 

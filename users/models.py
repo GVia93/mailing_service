@@ -17,9 +17,15 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
+    class Meta:
+        permissions = [
+            ("can_view_user_list", "Может просматривать список пользователей"),
+            ("can_block_users", "Может блокировать пользователей сервиса"),
+        ]
+
     def __str__(self):
         return self.email
 
-    @property
-    def is_manager(self):
-        return self.groups.filter(name="Менеджеры").exists()
+    # @property
+    # def is_manager(self):
+    #     return self.groups.filter(name="Менеджеры").exists()
