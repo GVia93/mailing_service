@@ -22,9 +22,19 @@
             <td>{{ mailing.end_time }}</td>
             <td>{{ mailing.get_status_display }}</td>
             <td>
-                <a href="{% url 'mailings:mailing_run' mailing.pk %}" class="btn btn-sm btn-primary">Отправить</a>
-                <a href="{% url 'mailings:mailing_update' mailing.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                <a href="{% url 'mailings:mailing_delete' mailing.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% if perms.mailings.can_toggle_mailing or request.user == mailing.owner %}
+                    <form action="{% url 'mailings:mailing_toggle' mailing.pk %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-success">
+                            {% if mailing.status == 'started' %}Отключить{% else %}Включить{% endif %}
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if request.user == mailing.owner %}
+                    <a href="{% url 'mailings:mailing_update' mailing.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url 'mailings:mailing_delete' mailing.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

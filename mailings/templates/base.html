@@ -13,7 +13,7 @@
         .sidebar {
             width: 200px;
             background-color: #1E1E2F;
-            padding-top: 20px;
+            padding: 20px 0;
         }
         .sidebar .nav-link {
             color: #f1f1f1;
@@ -32,7 +32,8 @@
     </style>
 </head>
 <body>
-    <div class="sidebar d-flex flex-column p-3 border-end">
+    <div class="sidebar d-flex flex-column justify-content-between p-3 border-end">
+        {% if request.user.is_authenticated %}
         <h5 class="text-center text-white">Меню</h5>
         <ul class="nav nav-pills flex-column mb-auto">
             <li>
@@ -48,12 +49,41 @@
                 <a href="{% url 'mailings:mailing_list' %}" class="nav-link {% if '/mailings/' in request.path %}active{% endif %}">Рассылки</a>
             </li>
             <li>
-                <a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempts/' in request.path %}active{% endif %}">Попытки</a>
+                <a href="{% url 'mailings:attempt_list' %}" class="nav-link {% if '/attempt_list/' in request.path %}active{% endif %}">Статистика</a>
             </li>
+            {% if perms.users.can_view_user_list %}
+            <li>
+                <a href="{% url 'users:user_list' %}" class="nav-link {% if '/user_list/' in request.path %}active{% endif %}">Пользователи</a>
+            </li>
+            {% endif %}
         </ul>
+        {% endif %}
         <hr>
-        <div class="px-3 text-white">
-            <small>Пользователь</small>
+
+        <div class="dropdown px-3">
+            <a href="#" class="d-block text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                Пользователь
+            </a>
+            <ul class="dropdown-menu text-small shadow">
+                {% if request.user.is_authenticated %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'users:profile' %}">Профиль</a>
+                    </li>
+                    <li>
+                        <form action="{% url 'users:logout' %}" method="post" class="px-3 m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link p-0 text-start">Выйти</button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'users:login' %}">Войти</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'users:register' %}">Регистрация</a>
+                    </li>
+                {% endif %}
+            </ul>
         </div>
     </div>
 
